@@ -22,12 +22,16 @@
   <script>
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
+    const points = [];
 
     canvas.addEventListener('click', (event) => {
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       drawPoint(x, y);
+      points.push({ x, y });
+      console.log('Points:', points);
+      console.log('Edge lengths:', getEdgeLengths(points));
     });
 
     function drawPoint(x, y, radius = 4, color = 'black') {
@@ -35,6 +39,17 @@
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
+    }
+
+    function getEdgeLengths(pts) {
+      const edges = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i];
+        const b = pts[i + 1];
+        const dist = Math.hypot(b.x - a.x, b.y - a.y);
+        edges.push(dist);
+      }
+      return edges;
     }
   </script>
 </body>
