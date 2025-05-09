@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Draw Points</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+    }
+    canvas {
+      border: 1px solid black;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="drawingCanvas" width="500" height="500"></canvas>
+
+  <script>
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.addEventListener('click', (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      drawPoint(x, y);
+    });
+
+    function drawPoint(x, y, radius = 4, color = 'black') {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+  </script>
+</body>
+</html>
