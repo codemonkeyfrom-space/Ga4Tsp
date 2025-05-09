@@ -3,31 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Draw Points</title>
+  <title>TSP Point Drawer</title>
   <style>
     body {
       display: flex;
-      justify-content: center;
-      margin-top: 40px;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
     }
     canvas {
       border: 1px solid black;
       cursor: crosshair;
     }
+    button {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <canvas id="drawingCanvas" width="500" height="500"></canvas>
+  <canvas id="drawingCanvas" width="600" height="600"></canvas>
+  <button id="solveButton">Solve with GA</button>
 
   <script>
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
+    const solveButton = document.getElementById('solveButton');
+    const points = [];
 
     canvas.addEventListener('click', (event) => {
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      drawPoint(x, y);
+      points.push({ x, y });
+      drawScene(points);
     });
 
     function drawPoint(x, y, radius = 4, color = 'black') {
@@ -36,6 +44,90 @@
       ctx.fillStyle = color;
       ctx.fill();
     }
+
+    function drawScene(pts, path = null) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (path) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        const start = pts[path[0]];
+        ctx.moveTo(start.x, start.y);
+        for (let i = 1; i < path.length; i++) {
+          const p = pts[path[i]];
+          ctx.lineTo(p.x, p.y);
+        }
+        ctx.lineTo(start.x, start.y); // complete loop
+        ctx.stroke();
+      }
+
+      for (const pt of pts) {
+        drawPoint(pt.x, pt.y);
+      }
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function totalDistance(pts, order) {
+      let dist = 0;
+      for (let i = 0; i < order.length - 1; i++) {
+        dist += distance(pts[order[i]], pts[order[i + 1]]);
+      }
+      dist += distance(pts[order[order.length - 1]], pts[order[0]]); // return to start
+      return dist;
+    }
+
+    function shuffle(arr) {
+      const result = arr.slice();
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function mutate(order) {
+      const i = Math.floor(Math.random() * order.length);
+      const j = Math.floor(Math.random() * order.length);
+      const newOrder = order.slice();
+      [newOrder[i], newOrder[j]] = [newOrder[j], newOrder[i]];
+      return newOrder;
+    }
+
+    function geneticSolve(pts) {
+      const size = pts.length;
+      let population = Array.from({ length: 100 }, () => shuffle([...Array(size).keys()]));
+      let best = population[0];
+      let bestDist = totalDistance(pts, best);
+
+      function step() {
+        const newPop = [];
+        for (let i = 0; i < population.length; i++) {
+          const candidate = mutate(best);
+          const d = totalDistance(pts, candidate);
+          if (d < bestDist) {
+            best = candidate;
+            bestDist = d;
+          }
+          newPop.push(candidate);
+        }
+        population = newPop;
+        drawScene(pts, best);
+      }
+
+      return setInterval(step, 50);
+    }
+
+    solveButton.addEventListener('click', () => {
+      if (points.length < 3) {
+        alert('You need at least 3 points to solve.');
+        return;
+      }
+      geneticSolve(points);
+    });
   </script>
 </body>
 </html>
